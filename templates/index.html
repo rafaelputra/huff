@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Naik anjing aja naik anjing</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h2>Image Compression</h2>
+    <form name="form" action="/upload" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()" required>
+        <input type="file" name="file" accept="image/png, image/jpeg" onchange="return fileValidation()" id="file"/>
+        <input type="submit"/>
+    </form>
+    <script src="{{ url_for('static', filename='script.js')}}"></script>
+</body>
+</html>
