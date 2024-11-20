@@ -3,14 +3,49 @@
 <head>
   <title>Naik anjing aja naik anjing</title>
   <meta charset="UTF-8">
+  <script src="https://cdn.tailwindcss.com"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+  <header class="bg-gray-800 text-white p-4">
+    <h1 class="text-3xl font-bold underline">
+      Aku Yorushika!
+    </h1>
     <h2>Image Compression</h2>
-    <form name="form" action="/upload" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()" required>
-        <input type="file" name="file" accept="image/png, image/jpeg" onchange="return fileValidation()" id="file"/>
-        <input type="submit"/>
+  </header>
+  
+  <div class="container mx-auto p-4 bg-gray-800 text-white">
+    <form name="form" action="/upload" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()" required class="flex items-center justify-center">
+      <input class="block text-gray-700 bg-white border border-gray-300 rounded-md py-2 px-3 shadow-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 hover:bg-violet-100" type="file" name="file" accept="image/png, image/jpeg" onchange="return fileValidation()" id="file"/>
+      <input class="ml-2 block text-gray-700 bg-white border border-gray-300 rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 hover:bg-blue-100" type="submit"/>
     </form>
-    <script src="{{ url_for('static', filename='script.js')}}"></script>
+  </div>
+  <div id="output" class="container mx-auto px-4 py-8 flex justify-start items-start">
+    <!-- Image output will be displayed here -->
+    <div>
+      <img class="w-1/4 h-1/4 object-contain"/>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='script.js')}}"></script>
+  <script>
+    document.forms['form'].onsubmit = function(event) {
+      event.preventDefault();
+      const fileInput = document.getElementById('file');
+      const outputDiv = document.getElementById('output').firstElementChild;
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.className = "w-1/4 h-1/4 object-contain";
+          outputDiv.innerHTML = '';
+          outputDiv.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+  </script>
 </body>
 </html>
+
