@@ -5,47 +5,46 @@
   <meta charset="UTF-8">
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    input[type="file"]:hover, input[type="submit"]:hover {
+      background-color: #f1edc6; /* Tailwind's gray-200 */
+    }
+  </style>
 </head>
 <body>
   <header class="bg-gray-800 text-white p-4">
-    <h1 class="text-3xl font-bold underline">
-      Aku Yorushika!
-    </h1>
+    <h1 class="text-3xl font-bold underline">Aku Yorushika!</h1>
     <h2>Image Compression</h2>
   </header>
-  
-  <div class="container mx-auto p-4 bg-gray-800 text-white">
-    <form name="form" action="/upload" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()" required class="flex items-center justify-center">
-      <input class="block text-gray-700 bg-white border border-gray-300 rounded-md py-2 px-3 shadow-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 hover:bg-violet-100" type="file" name="file" accept="image/png, image/jpeg" onchange="return fileValidation()" id="file"/>
-      <input class="ml-2 block text-gray-700 bg-white border border-gray-300 rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 hover:bg-blue-100" type="submit"/>
+
+  <div class="container mx-auto flex justify-center p-4 bg-gray-800 text-white">
+    <form name="form" action="/" method="POST" enctype="multipart/form-data" class="w-1/2">
+      <div class="flex justify-center">
+        <input class="block text-gray-700 bg-white border border-gray-300 rounded-md py-2 px-3 shadow-lg hover:shadow-md" type="file" name="image" accept="image/png, image/jpeg" required />
+        <input class="ml-2 block text-gray-700 bg-white border border-gray-300 rounded-md py-2 px-3 shadow-lg hover:shadow-md" type="submit" />
+      </div>
     </form>
   </div>
-  <div id="output" class="container mx-auto px-4 py-8 flex justify-start items-start">
-    <!-- Image output will be displayed here -->
-    <div>
-      <img class="w-1/4 h-1/4 object-contain"/>
+
+  <div class="container mx-auto px-4 py-12">
+    {% if original_image %}
+    <div class="flex flex-col gap-8">
+      <div class="flex justify-between">
+        <div class="w-1/2 mr-4">
+          <h3 class="text-lg font-bold">Original Image</h3>
+          <img src="{{ original_image }}" class="w-full h-full object-contain" />
+        </div>
+
+        <div class="w-1/2 ml-4">
+          <h3 class="text-lg font-bold">Compressed Image</h3>
+          <img src="{{ decompressed_image }}" class="w-full h-full object-contain" />
+        </div>
+      </div>
+
+      <p class="mt-4">Compression Ratio: {{ compression_ratio }}</p>
     </div>
+    {% endif %}
   </div>
-  <script src="{{ url_for('static', filename='script.js')}}"></script>
-  <script>
-    document.forms['form'].onsubmit = function(event) {
-      event.preventDefault();
-      const fileInput = document.getElementById('file');
-      const outputDiv = document.getElementById('output').firstElementChild;
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          img.className = "w-1/4 h-1/4 object-contain";
-          outputDiv.innerHTML = '';
-          outputDiv.appendChild(img);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-  </script>
 </body>
 </html>
 
