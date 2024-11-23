@@ -106,8 +106,25 @@ def get_image_base64(image):
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
     return "data:image/png;base64," + img_str
 
+import json
+
+# Add this function inside your Flask app code
+def tree_to_dict(node):
+    if node is None:
+        return None
+    if isinstance(node.value, int):  # Assuming values are integers or None
+        return {"name": str(node.value)}
+    return {
+        "name": str(node.value) if node.value is not None else "",
+        "children": [tree_to_dict(node.left), tree_to_dict(node.right)],
+    }
+
+
+huffman_tree = None  # Add this at the top of your app, outside any function
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
+    global huffman_tree  # Use the global variable to store the tree
     if request.method == 'POST':
         if 'image' not in request.files:
             return redirect(request.url)
@@ -122,7 +139,7 @@ def home():
 
             codes = {}
             for channel in ["R", "G", "B"]:
-                huffman_tree = build_huffman_tree(frequencies[channel])
+                huffman_tree = build_huffman_tree(frequencies[channel])  # Save the tree
                 codes[channel] = {}
                 generate_codes(huffman_tree, "", codes[channel])
 
@@ -142,6 +159,31 @@ def home():
                                   compression_ratio=compression_ratio)
 
     return render_template('index.html')
+
+@app.route('/get_tree_data', methods=['GET'])
+def get_tree_data():
+    global huffman_tree  # Use the globally stored tree
+    if huffman_tree is None:
+        return {"error": "Huffman tree not available"}, 400
+
+    tree_dict = tree_to_dict(huffman_tree)
+    return tree_dict  # Automatically converts to JSON
+
+
+@app.route('/tree', methods=['GET'])
+def visualize_tree():
+    # Generate the dictionary representation of the tree
+    tree_dict = tree_to_dict(huffman_tree)  # Assuming huffman_tree is defined
+
+    # Convert the dictionary to JSON format
+    tree_json = json.dumps(tree_dict, indent=4)
+
+    # Save the JSON to a file
+    with open('huffman_tree.json', 'w') as json_file:
+        json_file.write(tree_json)
+        # Render the tree visualization page
+    return render_template('tree.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=6969)
