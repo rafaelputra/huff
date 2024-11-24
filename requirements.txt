@@ -3,4 +3,3 @@ Pillow
 numpy
 Werkzeug
 pandas
-numpy
