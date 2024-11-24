@@ -34,16 +34,18 @@
   
 </head>
 <body>
-  <header class="bg-gray-800 text-white p-4">
+  <header class="bg-gray-800 text-white p-4 flex justify-between items-center">
     <h1 class="text-3xl font-bold">Huffman Tree Visualization</h1>
+    <a href="/" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+      Back to Index
+    </a>
   </header>
-<div class="container mx-auto px-4 py-12">
-  <div id="tree-container" class="bg-white p-6 rounded-lg shadow-lg" style="display: block; width: 100%; height: auto;">
-    <h2 class="text-xl font-bold mb-4">Huffman Tree</h2>
-    <!-- D3 visualization will be here -->
+  <div class="container mx-auto px-4 py-12">
+    <div id="tree-container" class="bg-white p-6 rounded-lg shadow-lg" style="display: block; width: 100%; height: auto;">
+      <h2 class="text-xl font-bold mb-4">Huffman Tree</h2>
+      <!-- D3 visualization will be here -->
+    </div>
   </div>
-</div>
-
 
   <script>
     // Fetch the tree data from the server
@@ -172,3 +174,5 @@
   </script>
 </body>
 </html>
+
+
