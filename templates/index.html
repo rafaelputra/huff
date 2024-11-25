@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Naik anjing aja naik anjing</title>
+  <title>12 jam di aji'in</title>
   <meta charset="UTF-8">
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,7 +41,9 @@
         </div>
       </div>
 
-      <p class="mt-4">Compression Ratio: {{ compression_ratio }}</p>
+      <p class="mt-4">original_size: {{ original_size }} bits = {{original_size_kb}} kb = {{original_size_mb}} mb</p>
+      <p class="mt-4">compressed_size: {{ compressed_size }} bits = {{compressed_size_kb}} kb = {{compressed_size_mb}} mb</p>
+      <p class="mt-4">Compression Ratio: {{ compression_ratio }} = {{compression_percentage}} %</p>
 
       <div class="flex justify-center mt-8">
         <a href="/tree_red" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">

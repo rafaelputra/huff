@@ -112,12 +112,16 @@ import json
 def tree_to_dict(node):
     if node is None:
         return None
-    if isinstance(node.value, int):  # Assuming values are integers or None
-        return {"name": str(node.value)}
-    return {
-        "name": str(node.value) if node.value is not None else "",
-        "children": [tree_to_dict(node.left), tree_to_dict(node.right)],
+    node_dict = {
+        "name": str(node.value) if node.value is not None else "Internal",
+        "frequency": node.frequency
     }
+    if node.left or node.right:  # If the node has children, it's not a leaf
+        node_dict["children"] = [
+            tree_to_dict(node.left),
+            tree_to_dict(node.right)
+        ]
+    return node_dict
 
 
 huff_red = None
@@ -171,10 +175,36 @@ def home():
             original_image_base64 = get_image_base64(image)
             decompressed_image_base64 = get_image_base64(decoded_image)
 
+            def bits_to_kb(bits):
+                return bits / 8 / 1024  # Convert bits to KB
+
+            def bits_to_mb(bits):
+                return bits / 8 / 1024 / 1024  # Convert bits to MB
+            
+            def calculate_compression_percentage(original_size, compressed_size):
+                # Make sure to handle division by zero
+                if original_size == 0:
+                    return 0
+                compression_percentage = (1 - (compressed_size / original_size)) * 100
+                return compression_percentage
+            
+            original_size_kb = bits_to_kb(original_size)
+            compressed_size_kb = bits_to_kb(compressed_size)
+            original_size_mb = bits_to_mb(original_size)
+            compressed_size_mb = bits_to_mb(compressed_size)
+            compression_percentage = calculate_compression_percentage(original_size, compressed_size)
+
             return render_template('index.html', 
-                                  original_image=original_image_base64,
-                                  decompressed_image=decompressed_image_base64,
-                                  compression_ratio=compression_ratio)
+                                original_image=original_image_base64,
+                                decompressed_image=decompressed_image_base64,
+                                original_size=original_size,
+                                compressed_size=compressed_size,
+                                compression_ratio=compression_ratio,
+                                original_size_kb=original_size_kb,
+                                compressed_size_kb=compressed_size_kb,
+                                original_size_mb=original_size_mb,
+                                compression_percentage = compression_percentage,
+                                compressed_size_mb=compressed_size_mb)
 
     return render_template('index.html')
 
