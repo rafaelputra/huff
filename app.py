@@ -113,7 +113,7 @@ def tree_to_dict(node):
     if node is None:
         return None
     node_dict = {
-        "name": str(node.value) if node.value is not None else "Internal",
+        "name": str(node.value) if node.value is not None else ".",
         "frequency": node.frequency
     }
     if node.left or node.right:  # If the node has children, it's not a leaf
