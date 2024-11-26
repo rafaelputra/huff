@@ -39,17 +39,14 @@
   </style>
 </head>
 <body>
-  <header class="bg-gray-800 text-white p-4 flex justify-between items-center">
-    <h1 class="text-3xl font-bold">Huffman Tree Visualization</h1>
+  <header class="bg-blue-500 text-white p-4 flex justify-between items-center">
+    <h1 class="text-3xl font-bold">Huffman Tree Visualization for Blue channel</h1>
     <div class="flex space-x-2">
       <a id="red-channel" href="/tree_red" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
         Red Channel
       </a>
       <a id="green-channel" href="/tree_green" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
         Green Channel
-      </a>
-      <a id="blue-channel" href="/tree_blue" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Blue Channel
       </a>
       <a href="/" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
         Back to Index
@@ -62,7 +59,6 @@
       <!-- D3 visualization will be here -->
     </div>
   </div>
-
   <script>
     // Fetch the tree data from the server
     fetch('/get_tree_blue')
@@ -70,23 +66,23 @@
       .then(data => {
         visualizeTree(data);  // Call the function to visualize the tree
       });
-
+  
     // Function to visualize the tree using D3.js
     function visualizeTree(treeData) {
-      const margin = { top: 2500, right: 10, bottom: 40, left: 5 };
+      const margin = { top: 2500, right: 10, bottom: 40, left: 25 };
       const width = 10000; // Use a larger base width to start with
       const height = 5000; // Use a larger base height to start with
-
+  
       // Create an SVG element, initially with arbitrary size, that will be adjusted later
       const svg = d3.select("#tree-container").append("svg")
         .attr("width", width + margin.right + margin.left)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
-
+  
       const tree = d3.tree().size([height, width])
         .nodeSize([25, 100]);  // Set fixed spacing between nodes (vertical, horizontal)
-
+  
       // Filter out `null` nodes and create a valid D3 hierarchy
       function cleanTreeData(data) {
         if (!data || data === null) return null;
@@ -96,21 +92,21 @@
           children: cleanChildren.map(cleanTreeData).filter(child => child !== null)
         };
       }
-
+  
       const cleanedData = cleanTreeData(treeData);
       const root = d3.hierarchy(cleanedData, d => d.children);
-
+  
       // Generate the nodes and links
       const nodes = tree(root).descendants();
       const links = tree(root).links();
-
+  
       // Adjust the SVG width and height dynamically based on tree content
       const treeWidth = Math.max(width, d3.max(nodes, d => d.y) + margin.right);
       const treeHeight = Math.max(height, d3.max(nodes, d => d.x) + margin.bottom);
-
+  
       svg.attr("width", treeWidth + margin.right + margin.left)
         .attr("height", treeHeight + margin.top + margin.bottom);
-
+  
       // Draw the links between nodes
       svg.selectAll(".link")
         .data(links)
@@ -119,50 +115,56 @@
         .attr("d", d3.linkHorizontal()
           .x(d => d.y)
           .y(d => d.x));
-
+  
+      // Shared click event handler
+      function toggleContent(event, d) {
+        const isNameDisplayed = d3.select(this.parentNode).select("text").text() === d.data.name;
+  
+        const circle = d3.select(this.parentNode).select("circle");
+        const text = d3.select(this.parentNode).select("text");
+  
+        if (isNameDisplayed) {
+          // Show frequency, resize circle based on frequency, and change color to red
+          text.text(d.data.frequency)
+            .style("fill","white");
+          circle.transition()
+            .duration(300)
+            .attr("r", 4 + Math.max(0, d.data.frequency.toString().length * 3))  // Resize based on frequency length
+            .style("fill", "#5ea8f2");
+        } else {
+          // Show name, reset circle size and color
+          text.text(d.data.name)
+          .style("fill","white");
+          circle.transition()
+            .duration(300)
+            .attr("r", 4 + Math.max(0, d.data.name.length * 3))  // Reset size to name length
+            .style("fill", "#575555");
+        }
+      }
+  
       // Draw the nodes
       const node = svg.selectAll(".node")
         .data(nodes)
         .enter().append("g")
         .attr("class", "node")
         .attr("transform", d => `translate(${d.y},${d.x})`);
-
-      // Add circles for each node, set initial size based on name length
+  
+      // Add circles for each node
       node.append("circle")
         .attr("r", d => 4 + Math.max(0, d.data.name.length * 3))  // Base size on name length
-        .style("fill", "#1f77b4");
-
+        .style("fill", "#575555")
+        .on("click", toggleContent);  // Attach event to circle
+  
       // Add name text by default
       node.append("text")
+        .style("fill","white")
         .attr("dy", 3)
         .attr("x", 0)
         .style("text-anchor", "middle")
         .style("font-size", "8px")
         .text(d => d.data.name)
-        .on("click", function(event, d) {
-          // Toggle between name and frequency on click
-          const isNameDisplayed = d3.select(this).text() === d.data.name;
-
-          const circle = d3.select(this.parentNode).select("circle");
-          const text = d3.select(this);
-
-          if (isNameDisplayed) {
-            // Show frequency, resize circle based on frequency, and change color to red
-            text.text(d.data.frequency);
-            circle.transition()
-              .duration(300)
-              .attr("r", 4 + Math.max(0, d.data.frequency.toString().length * 3))  // Resize based on frequency length
-              .style("fill", "red");
-          } else {
-            // Show name, reset circle size and color
-            text.text(d.data.name);
-            circle.transition()
-              .duration(300)
-              .attr("r", 4 + Math.max(0, d.data.name.length * 3))  // Reset size to name length
-              .style("fill", "#1f77b4");
-          }
-        });
+        .on("click", toggleContent);  // Attach event to text
     }
-  </script>
+  </script>  
 </body>
 </html>
