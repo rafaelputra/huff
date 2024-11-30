@@ -17,6 +17,7 @@ def allowed_file(filename):
 
 class HuffmanNode:
     def __init__(self, value, frequency):
+        
         self.value = value
         self.frequency = frequency
         self.left = None
@@ -136,10 +137,29 @@ def home():
             original_image_base64 = get_image_base64(image)
             decompressed_image_base64 = get_image_base64(decoded_image)
 
+            def bits_to_kb(bits):
+                return round(bits / 8 / 1024, 2)  # Convert bits to KB with 2 decimal places
+
+            def bits_to_mb(bits):
+                return round(bits / 8 / 1024 / 1024, 2)  # Convert bits to MB with 2 decimal places
+
+            def calculate_compression_percentage(original_size, compressed_size):
+                if original_size == 0:
+                    return 0
+                compression_percentage = round((1 - (compressed_size / original_size)) * 100, 2)  # Round to 2 decimal places
+                return compression_percentage
+
             return render_template('index.html', 
-                                  original_image=original_image_base64,
-                                  decompressed_image=decompressed_image_base64,
-                                  compression_ratio=compression_ratio)
+                                original_image=original_image_base64,
+                                decompressed_image=decompressed_image_base64,
+                                original_size=original_size,
+                                compressed_size=compressed_size,
+                                compression_ratio=compression_ratio,
+                                original_size_kb = bits_to_kb(original_size),
+                                compressed_size_kb = bits_to_kb(compressed_size),
+                                original_size_mb = bits_to_mb(original_size),
+                                compressed_size_mb = bits_to_mb(compressed_size),
+                                compression_percentage = calculate_compression_percentage(original_size, compressed_size))
 
     return render_template('index.html')
 
