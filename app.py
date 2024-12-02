@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 from PIL import Image
@@ -10,6 +10,7 @@ from io import BytesIO
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './static/uploads'
+app.config['download_folder'] = './static/download'
 app.config['ALLOWED_EXTENSIONS'] = {'png'}
 
 def allowed_file(filename):
@@ -108,7 +109,6 @@ def get_image_base64(image):
 
 import json
 
-# Add this function inside your Flask app code
 def tree_to_dict(node):
     if node is None:
         return None
@@ -133,7 +133,7 @@ def home():
     global huffman_tree
     global huff_red
     global huff_green
-    global huff_blue# Use the global variable to store the tree
+    global huff_blue
     if request.method == 'POST':
         if 'image' not in request.files:
             return redirect(request.url)
@@ -176,23 +176,29 @@ def home():
             decompressed_image_base64 = get_image_base64(decoded_image)
 
             def bits_to_kb(bits):
-                return bits / 8 / 1024  # Convert bits to KB
+                return round(bits / 8 / 1024, 2)  # Convert bits to KB and round to 2 decimal places
 
             def bits_to_mb(bits):
-                return bits / 8 / 1024 / 1024  # Convert bits to MB
-            
+                return round(bits / 8 / 1024 / 1024, 2)  # Convert bits to MB and round to 2 decimal places
+
             def calculate_compression_percentage(original_size, compressed_size):
                 # Make sure to handle division by zero
                 if original_size == 0:
                     return 0
                 compression_percentage = (1 - (compressed_size / original_size)) * 100
-                return compression_percentage
+                return round(compression_percentage, 2)  # Round to 2 decimal places
+
             
             original_size_kb = bits_to_kb(original_size)
             compressed_size_kb = bits_to_kb(compressed_size)
             original_size_mb = bits_to_mb(original_size)
             compressed_size_mb = bits_to_mb(compressed_size)
             compression_percentage = calculate_compression_percentage(original_size, compressed_size)
+
+            # Tambahkan setelah `decoded_image` dihasilkan
+            output_path = os.path.join(app.config['download_folder'], 'decompressed_image.png')
+            Image.fromarray(decoded_image).save(output_path)
+
 
             return render_template('index.html', 
                                 original_image=original_image_base64,
@@ -207,6 +213,19 @@ def home():
                                 compressed_size_mb=compressed_size_mb)
 
     return render_template('index.html')
+
+@app.route('/download', methods=['GET'])
+def download_file():
+    output_path = os.path.join(app.config['download_folder'], 'decompressed_image.png')
+    if os.path.exists(output_path):
+        return send_from_directory(
+            app.config['download_folder'], 
+            'decompressed_image.png', 
+            as_attachment=True,
+            mimetype='image/png'
+        )
+    else:
+        return "File not found", 404
 
 
 @app.route('/get_tree_red', methods=['GET'])
