@@ -67,8 +67,9 @@
 
       <div class="flex justify-center">
         <table class="w-3/4">
+
           <tr>
-            <th>Size</th>
+            <th>Image_Size</th>
             <th>Original</th>
             <th>Compressed</th>
             <th>Compression Ratio</th>
@@ -76,6 +77,14 @@
 
           <tr>
             <td>Bits</td>
+            <td>{{ original_size_huff }}</td>
+            <td>{{ compressed_size_huff }}</td>
+            <td>{{ compression_ratio_huff }} ({{ compression_percentage_huff }}%)</td>
+          </tr>
+
+
+          <tr>
+            <td>Byte</td>
             <td>{{ original_size }}</td>
             <td>{{ compressed_size }}</td>
             <td>{{ compression_ratio }} ({{ compression_percentage }}%)</td>
@@ -114,7 +123,7 @@
   </div>
 </body>
 
-<footer class="bg-gray-800 p-4 text-white bottom-0 left-0 w-full text-right text-sm">
+<footer class="bg-gray-800 p-4 text-white fixed bottom-0 left-0 w-full text-right text-sm">
   <p> 2024 Aku Yorushika - Your Beloved Image Compressor</p>
 </footer>
 </html>

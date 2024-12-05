@@ -168,18 +168,38 @@ def home():
             encoded_data = encode_color_image(image, codes)
             decoded_image = decode_color_image(encoded_data, codes, image.shape)
 
-            original_size = image.size * 8  # 8 bits per pixel for RGB
-            compressed_size = sum(len(encoded_data[channel]) for channel in ["R", "G", "B"])
-            compression_ratio = original_size / compressed_size
+            # Tambahkan setelah `decoded_image` dihasilkan
+            output_path = os.path.join(app.config['download_folder'], 'decompressed_image.png')
+            Image.fromarray(decoded_image).save(output_path)
+
+            original_size_huff = image.size * 8  # 8 bits per pixel for RGB
+            compressed_size_huff = sum(len(encoded_data[channel]) for channel in ["R", "G", "B"])
+            compression_ratio_huff = round(original_size_huff / compressed_size_huff,2)
+
+            def calculate_compression_percentage_huff(original_size_huff, compressed_size_huff):
+                # Make sure to handle division by zero
+                if original_size_huff == 0:
+                    return 0
+                compression_percentage_huff = (1 - (compressed_size_huff / original_size_huff)) * 100
+                return round(compression_percentage_huff, 2)  # Round to 2 decimal places
+
+           # Ukuran file asli
+            original_size = os.path.getsize(file_path)  # File path dari folder uploads
+
+            # Ukuran file setelah kompresi
+            compressed_image_path = os.path.join(app.config['download_folder'], 'decompressed_image.png')
+            if os.path.exists(compressed_image_path):
+                compressed_size = os.path.getsize(compressed_image_path)
+            else:
+                compressed_size = None  # Atur jika file belum ada
 
             original_image_base64 = get_image_base64(image)
             decompressed_image_base64 = get_image_base64(decoded_image)
 
-            def bits_to_kb(bits):
-                return round(bits / 8 / 1024, 2)  # Convert bits to KB and round to 2 decimal places
-
-            def bits_to_mb(bits):
-                return round(bits / 8 / 1024 / 1024, 2)  # Convert bits to MB and round to 2 decimal places
+            original_size_kb = round(original_size / 1024, 2)  # Dalam KB dengan 2 angka desimal
+            compressed_size_kb = round(compressed_size / 1024, 2)  if compressed_size else "N/A"
+            original_size_mb = round(original_size / (1024 ** 2), 2)
+            compressed_size_mb = round(compressed_size / (1024 ** 2), 2) if compressed_size else "N/A"  # Dalam MB dengan 2 angka desimal
 
             def calculate_compression_percentage(original_size, compressed_size):
                 # Make sure to handle division by zero
@@ -188,21 +208,19 @@ def home():
                 compression_percentage = (1 - (compressed_size / original_size)) * 100
                 return round(compression_percentage, 2)  # Round to 2 decimal places
 
-            
-            original_size_kb = bits_to_kb(original_size)
-            compressed_size_kb = bits_to_kb(compressed_size)
-            original_size_mb = bits_to_mb(original_size)
-            compressed_size_mb = bits_to_mb(compressed_size)
-            compression_percentage = calculate_compression_percentage(original_size, compressed_size)
+           # Rasio kompresi (hindari pembagian oleh nol)
+            compression_ratio = round(original_size / compressed_size, 2) if compressed_size > 0 else "N/A"
 
-            # Tambahkan setelah `decoded_image` dihasilkan
-            output_path = os.path.join(app.config['download_folder'], 'decompressed_image.png')
-            Image.fromarray(decoded_image).save(output_path)
-
+            # Persentase kompresi
+            compression_percentage = round((1 - (compressed_size / original_size)) * 100, 2) if compressed_size > 0 else 0
 
             return render_template('index.html', 
                                 original_image=original_image_base64,
                                 decompressed_image=decompressed_image_base64,
+                                original_size_huff=original_size_huff,
+                                compressed_size_huff=compressed_size_huff,
+                                compression_ratio_huff=compression_ratio_huff,
+                                compression_percentage_huff=calculate_compression_percentage(original_size_huff, compressed_size_huff),
                                 original_size=original_size,
                                 compressed_size=compressed_size,
                                 compression_ratio=compression_ratio,
