@@ -11,7 +11,7 @@ from io import BytesIO
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './static/uploads'
 app.config['download_folder'] = './static/download'
-app.config['ALLOWED_EXTENSIONS'] = {'png'}
+app.config['ALLOWED_EXTENSIONS'] = {'bmp'}  # Allow BMP files
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -98,14 +98,14 @@ def decode_color_image(encoded_data, codes, image_shape):
     return decoded_image
 
 def load_color_image(path):
-    image = Image.open(path).convert("RGB")
+    image = Image.open(path).convert("RGB")  # Handles BMP files as well
     return np.array(image)
 
 def get_image_base64(image):
     buffered = BytesIO()
-    Image.fromarray(image).save(buffered, format="PNG")
+    Image.fromarray(image).save(buffered, format="BMP")  # Save as BMP format for base64
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-    return "data:image/png;base64," + img_str
+    return "data:image/bmp;base64," + img_str
 
 import json
 
@@ -169,10 +169,12 @@ def home():
             decoded_image = decode_color_image(encoded_data, codes, image.shape)
 
             # Tambahkan setelah `decoded_image` dihasilkan
-            output_path = os.path.join(app.config['download_folder'], 'decompressed_image.png')
+            output_path = os.path.join(app.config['download_folder'], 'decompressed_image.bmp')
+            if os.path.exists(output_path):
+                os.remove(output_path)
             Image.fromarray(decoded_image).save(output_path)
 
-            original_size_huff = image.size * 8  # 8 bits per pixel for RGB
+            original_size_huff = image.shape[0] * image.shape[1] * 24  # 8 bits per pixel for RGB
             compressed_size_huff = sum(len(encoded_data[channel]) for channel in ["R", "G", "B"])
             compression_ratio_huff = round(original_size_huff / compressed_size_huff,2)
 
@@ -183,11 +185,11 @@ def home():
                 compression_percentage_huff = (1 - (compressed_size_huff / original_size_huff)) * 100
                 return round(compression_percentage_huff, 2)  # Round to 2 decimal places
 
-           # Ukuran file asli
+            # Ukuran file asli
             original_size = os.path.getsize(file_path)  # File path dari folder uploads
 
             # Ukuran file setelah kompresi
-            compressed_image_path = os.path.join(app.config['download_folder'], 'decompressed_image.png')
+            compressed_image_path = os.path.join(app.config['download_folder'], 'decompressed_image.bmp')
             if os.path.exists(compressed_image_path):
                 compressed_size = os.path.getsize(compressed_image_path)
             else:
@@ -208,7 +210,7 @@ def home():
                 compression_percentage = (1 - (compressed_size / original_size)) * 100
                 return round(compression_percentage, 2)  # Round to 2 decimal places
 
-           # Rasio kompresi (hindari pembagian oleh nol)
+            # Rasio kompresi (hindari pembagian oleh nol)
             compression_ratio = round(original_size / compressed_size, 2) if compressed_size > 0 else "N/A"
 
             # Persentase kompresi
@@ -234,13 +236,13 @@ def home():
 
 @app.route('/download', methods=['GET'])
 def download_file():
-    output_path = os.path.join(app.config['download_folder'], 'decompressed_image.png')
+    output_path = os.path.join(app.config['download_folder'], 'decompressed_image.bmp')
     if os.path.exists(output_path):
         return send_from_directory(
             app.config['download_folder'], 
-            'decompressed_image.png', 
+            'decompressed_image.bmp', 
             as_attachment=True,
-            mimetype='image/png'
+            mimetype='image/bmp'
         )
     else:
         return "File not found", 404
@@ -318,7 +320,6 @@ def visualize_blue_tree():
     
     # Render the tree visualization page, passing the red JSON filename
     return render_template('tree_blue.html')
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=6969)

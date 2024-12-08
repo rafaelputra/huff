@@ -44,7 +44,7 @@
   <div class="container mx-auto px-4 py-12">
     <form name="form" action="/" method="POST" enctype="multipart/form-data" class="w-1/2 mx-auto">
       <div class="flex justify-center">
-        <input class="block text-gray-700 bg-white border border-gray-300 rounded-md py-2 px-3 shadow-lg hover:shadow-md" type="file" name="image" accept="image/png, image/jpeg" required />
+        <input class="block text-gray-700 bg-white border border-gray-300 rounded-md py-2 px-3 shadow-lg hover:shadow-md" type="file" name="image" accept="image/bmp" required />
         <input class="ml-2 block text-gray-700 bg-white border border-gray-300 rounded-md py-2 px-3 shadow-lg hover:shadow-md" type="submit" />
       </div>
     </form>
@@ -67,9 +67,8 @@
 
       <div class="flex justify-center">
         <table class="w-3/4">
-
           <tr>
-            <th>Image_Size</th>
+            <th>Bits</th>
             <th>Original</th>
             <th>Compressed</th>
             <th>Compression Ratio</th>
@@ -81,7 +80,17 @@
             <td>{{ compressed_size_huff }}</td>
             <td>{{ compression_ratio_huff }} ({{ compression_percentage_huff }}%)</td>
           </tr>
+        </table>
+      </div>
 
+      <div class="flex justify-center mt-4">
+        <table class="w-3/4">
+          <tr>
+            <th>Byte</th>
+            <th>Original</th>
+            <th>Compressed</th>
+            <th>Compression Ratio</th>
+          </tr>
 
           <tr>
             <td>Byte</td>
@@ -89,6 +98,7 @@
             <td>{{ compressed_size }}</td>
             <td>{{ compression_ratio }} ({{ compression_percentage }}%)</td>
           </tr>
+
 
           <tr>
             <td>KB</td>
