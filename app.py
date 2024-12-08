@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 from PIL import Image
@@ -10,7 +10,8 @@ from io import BytesIO
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './static/uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'png'}
+app.config['download_folder'] = './static/download'
+app.config['ALLOWED_EXTENSIONS'] = {'bmp'}  # Allow BMP files
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -97,18 +98,17 @@ def decode_color_image(encoded_data, codes, image_shape):
     return decoded_image
 
 def load_color_image(path):
-    image = Image.open(path).convert("RGB")
+    image = Image.open(path).convert("RGB")  # Handles BMP files as well
     return np.array(image)
 
 def get_image_base64(image):
     buffered = BytesIO()
-    Image.fromarray(image).save(buffered, format="PNG")
+    Image.fromarray(image).save(buffered, format="BMP")  # Save as BMP format for base64
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-    return "data:image/png;base64," + img_str
+    return "data:image/bmp;base64," + img_str
 
 import json
 
-# Add this function inside your Flask app code
 def tree_to_dict(node):
     if node is None:
         return None
@@ -133,7 +133,7 @@ def home():
     global huffman_tree
     global huff_red
     global huff_green
-    global huff_blue# Use the global variable to store the tree
+    global huff_blue
     if request.method == 'POST':
         if 'image' not in request.files:
             return redirect(request.url)
@@ -168,35 +168,61 @@ def home():
             encoded_data = encode_color_image(image, codes)
             decoded_image = decode_color_image(encoded_data, codes, image.shape)
 
-            original_size = image.size * 8  # 8 bits per pixel for RGB
-            compressed_size = sum(len(encoded_data[channel]) for channel in ["R", "G", "B"])
-            compression_ratio = original_size / compressed_size
+            # Tambahkan setelah `decoded_image` dihasilkan
+            output_path = os.path.join(app.config['download_folder'], 'decompressed_image.bmp')
+            if os.path.exists(output_path):
+                os.remove(output_path)
+            Image.fromarray(decoded_image).save(output_path)
+
+            original_size_huff = image.shape[0] * image.shape[1] * 24  # 8 bits per pixel for RGB
+            compressed_size_huff = sum(len(encoded_data[channel]) for channel in ["R", "G", "B"])
+            compression_ratio_huff = round(original_size_huff / compressed_size_huff,2)
+
+            def calculate_compression_percentage_huff(original_size_huff, compressed_size_huff):
+                # Make sure to handle division by zero
+                if original_size_huff == 0:
+                    return 0
+                compression_percentage_huff = (1 - (compressed_size_huff / original_size_huff)) * 100
+                return round(compression_percentage_huff, 2)  # Round to 2 decimal places
+
+            # Ukuran file asli
+            original_size = os.path.getsize(file_path)  # File path dari folder uploads
+
+            # Ukuran file setelah kompresi
+            compressed_image_path = os.path.join(app.config['download_folder'], 'decompressed_image.bmp')
+            if os.path.exists(compressed_image_path):
+                compressed_size = os.path.getsize(compressed_image_path)
+            else:
+                compressed_size = None  # Atur jika file belum ada
 
             original_image_base64 = get_image_base64(image)
             decompressed_image_base64 = get_image_base64(decoded_image)
 
-            def bits_to_kb(bits):
-                return bits / 8 / 1024  # Convert bits to KB
+            original_size_kb = round(original_size / 1024, 2)  # Dalam KB dengan 2 angka desimal
+            compressed_size_kb = round(compressed_size / 1024, 2)  if compressed_size else "N/A"
+            original_size_mb = round(original_size / (1024 ** 2), 2)
+            compressed_size_mb = round(compressed_size / (1024 ** 2), 2) if compressed_size else "N/A"  # Dalam MB dengan 2 angka desimal
 
-            def bits_to_mb(bits):
-                return bits / 8 / 1024 / 1024  # Convert bits to MB
-            
             def calculate_compression_percentage(original_size, compressed_size):
                 # Make sure to handle division by zero
                 if original_size == 0:
                     return 0
                 compression_percentage = (1 - (compressed_size / original_size)) * 100
-                return compression_percentage
-            
-            original_size_kb = bits_to_kb(original_size)
-            compressed_size_kb = bits_to_kb(compressed_size)
-            original_size_mb = bits_to_mb(original_size)
-            compressed_size_mb = bits_to_mb(compressed_size)
-            compression_percentage = calculate_compression_percentage(original_size, compressed_size)
+                return round(compression_percentage, 2)  # Round to 2 decimal places
+
+            # Rasio kompresi (hindari pembagian oleh nol)
+            compression_ratio = round(original_size / compressed_size, 2) if compressed_size > 0 else "N/A"
+
+            # Persentase kompresi
+            compression_percentage = round((1 - (compressed_size / original_size)) * 100, 2) if compressed_size > 0 else 0
 
             return render_template('index.html', 
                                 original_image=original_image_base64,
                                 decompressed_image=decompressed_image_base64,
+                                original_size_huff=original_size_huff,
+                                compressed_size_huff=compressed_size_huff,
+                                compression_ratio_huff=compression_ratio_huff,
+                                compression_percentage_huff=calculate_compression_percentage(original_size_huff, compressed_size_huff),
                                 original_size=original_size,
                                 compressed_size=compressed_size,
                                 compression_ratio=compression_ratio,
@@ -207,6 +233,19 @@ def home():
                                 compressed_size_mb=compressed_size_mb)
 
     return render_template('index.html')
+
+@app.route('/download', methods=['GET'])
+def download_file():
+    output_path = os.path.join(app.config['download_folder'], 'decompressed_image.bmp')
+    if os.path.exists(output_path):
+        return send_from_directory(
+            app.config['download_folder'], 
+            'decompressed_image.bmp', 
+            as_attachment=True,
+            mimetype='image/bmp'
+        )
+    else:
+        return "File not found", 404
 
 
 @app.route('/get_tree_red', methods=['GET'])
@@ -281,7 +320,6 @@ def visualize_blue_tree():
     
     # Render the tree visualization page, passing the red JSON filename
     return render_template('tree_blue.html')
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=6969)

@@ -7,13 +7,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
-    .container {
-      width: auto;
+    html, body {
+      height: 100%;
       margin: 0;
-      padding: 20px;
-      position: absolute;
-      top: 100;
-      left: 0;
+      overflow: auto; /* Allow full page scrolling */
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .container {
+      width: 100%;
+      flex-grow: 1;
+      position: relative;
     }
 
     .node circle {
@@ -36,6 +45,15 @@
       fill: #333;
     }
 
+    #tree-container {
+      overflow: auto; /* Enable scrolling for tree content */
+      width: 100%;
+      height: 100%; /* Allow the container to take up full height */
+    }
+
+    svg {
+      display: block; /* Ensure SVG takes up full space */
+    }
   </style>
 </head>
 <body>
@@ -54,8 +72,8 @@
     </div>
   </header>
   <div class="container mx-auto px-4 py-12">
-    <div id="tree-container" class="bg-white p-6 rounded-lg shadow-lg" style="display: block; width: 100%; height: auto;">
-      <h2 class="text-xl font-bold mb-4">Huffman Tree</h2>
+    <div id="tree-container" class="bg-white p-6 rounded-lg">
+      <h2 class="text-5xl font-bold mb-4">Huffman Tree</h2>
       <!-- D3 visualization will be here -->
     </div>
   </div>
@@ -70,7 +88,7 @@
 
     // Function to visualize the tree using D3.js
     function visualizeTree(treeData) {
-      const margin = { top: 2500, right: 10, bottom: 40, left: 25 };
+      const margin = { top: 4000, right: 10, bottom: 40, left: 25 };
       const width = 10000; // Use a larger base width to start with
       const height = 5000; // Use a larger base height to start with
   
